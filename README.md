@@ -55,13 +55,13 @@ Fly through space, destroy asteroids, avoid collisions, and survive as long as p
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/asteroids-clone.git
+git clone https://github.com/Zypher90/asteroids.git
 ```
 
 ### 2. Open the project
 
 ```bash
-cd asteroids-clone
+cd asteroids
 ```
 
 ### 3. Run locally
