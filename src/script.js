@@ -44,6 +44,40 @@ class Player {
     }
 }
 
+class Bullet {
+    constructor ({position, velocity, orientation}) {
+        this.position = position
+        this.velocity = velocity
+        this.orientation = orientation
+    }
+
+    draw() {
+        c.beginPath()
+        c.arc(this.position.x, this.position.y, 4, 0, Math.PI*2, false)
+        c.closePath()
+        c.fillStyle = 'white'
+        c.fill()
+    }
+
+    update() {
+        this.draw()
+
+        if(this.position.x > window.innerWidth) {
+            this.position.x = window.innerWidth;
+        }else if(this.position.x < 0){
+            this.position.x = 0
+        }
+        if(this.position.y > window.innerHeight){
+            this.position.y = window.innerHeight
+        }else if(this.position.y<0){
+            this.position.y = 0
+        }
+ 
+        this.position.x += this.velocity * Math.sin(this.orientation + Math.PI*0.5)
+        this.position.y += this.velocity * Math.cos(this.orientation - Math.PI*0.5)
+    }
+}
+
 const player1 = new Player(
     {
         position: {x: canvas.width/2, y: canvas.height/2},
@@ -70,37 +104,64 @@ const keys = {
     },
     s: {
         isPressed: false
+    },
+    space: {
+        isPressed: false
     }
 }
+
+const VMAX = 2.25
+
+const bullets = []
 
 function animate() {
     window.requestAnimationFrame(animate)
     c.fillStyle = 'black'
     c.fillRect(0, 0, canvas.width, canvas.height)
 
+    for (let bullet of bullets) {
+        bullet.update();
+
+        if(bullet.position.x < 0 || bullet.position.x > window.innerWidth || bullet.position.y < 0 || bullet.position.y > window.innerHeight){
+            bullets.splice(bullets.indexOf(bullet), 1);      
+        }
+    }
+
     player1.update();
 
-    if(player1.velocity > 0){
-        player1.velocity -= player1.friction
-    }
+    player1.velocity*=0.99;
     if(keys.w.isPressed){
-        player1.velocity<1.75?player1.velocity+=player1.acceleration:player1.velocity=1.75;
+        player1.velocity<VMAX?player1.velocity+=player1.acceleration:player1.velocity=VMAX;
     }
     if(keys.d.isPressed) {
         player1.rotation += 0.015
     }
     if(keys.s.isPressed) {
-        player1.velocity>-1.75?player1.velocity-=player1.acceleration:player1.velocity=-1.75;
+        player1.velocity>-VMAX?player1.velocity-=player1.acceleration:player1.velocity=-VMAX;
     }
     if(keys.a.isPressed){
         player1.rotation -= 0.015
     }
-    // keys.s.isPressed?player1.velocity.y=1:player1.velocity.y=0;
+
+    if(keys.space.isPressed) {
+        keys.space.isPressed = false
+        
+        bullets.push(new Bullet({
+            position: {
+                x: player1.position.x,
+                y: player1.position.y,
+            },
+            velocity: 6,
+            orientation: player1.rotation
+        }))
+        
+    }
 }
 
 animate()
 
 window.addEventListener('keydown', (e) => {
+    
     switch(e.code){
         case "KeyW": 
             keys.w.isPressed = true;
@@ -114,6 +175,10 @@ window.addEventListener('keydown', (e) => {
         case "KeyS": 
             keys.s.isPressed = true;
             break;
+        case "Space":
+            keys.space.isPressed = true;
+            break;
+        
     }
 })
 
@@ -130,6 +195,9 @@ window.addEventListener('keyup', (e) => {
             break;
         case "KeyS": 
             keys.s.isPressed = false;
+            break;
+        case "Space":
+            keys.space.isPressed = false;
             break;
     }
 })
