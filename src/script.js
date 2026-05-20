@@ -7,6 +7,8 @@ canvas.height = window.innerHeight;
 c.fillStyle = 'black'
 c.fillRect(0, 0, canvas.width, canvas.height)
 
+
+//Player object
 class Player {
     constructor({position, velocity, color, friction, acceleration}) {
         this.position = position
@@ -39,29 +41,6 @@ class Player {
     update() {
         this.draw()
 
-        this.position.x += this.velocity * Math.sin(this.rotation + Math.PI * 0.5);
-        this.position.y += this.velocity * Math.cos(this.rotation - Math.PI * 0.5);
-    }
-}
-
-class Bullet {
-    constructor ({position, velocity, orientation}) {
-        this.position = position
-        this.velocity = velocity
-        this.orientation = orientation
-    }
-
-    draw() {
-        c.beginPath()
-        c.arc(this.position.x, this.position.y, 4, 0, Math.PI*2, false)
-        c.closePath()
-        c.fillStyle = 'white'
-        c.fill()
-    }
-
-    update() {
-        this.draw()
-
         if(this.position.x > window.innerWidth) {
             this.position.x = window.innerWidth;
         }else if(this.position.x < 0){
@@ -72,9 +51,66 @@ class Bullet {
         }else if(this.position.y<0){
             this.position.y = 0
         }
- 
+
+        this.position.x += this.velocity * Math.sin(this.rotation + Math.PI * 0.5);
+        this.position.y += this.velocity * Math.cos(this.rotation - Math.PI * 0.5);
+    }
+}
+
+
+//Bullet class
+class Bullet {
+    constructor ({position, velocity, orientation}) {
+        this.position = position
+        this.velocity = velocity
+        this.orientation = orientation
+    }
+
+    draw() {
+        c.beginPath()
+        c.arc(this.position.x + 15*Math.sin(this.orientation + Math.PI*0.5), this.position.y + 15*Math.cos(this.orientation - Math.PI*0.5), 4, 0, Math.PI*2, false)
+        c.closePath()
+        c.fillStyle = 'white'
+        c.fill()
+    }
+
+    update() {
+        this.draw()
+
         this.position.x += this.velocity * Math.sin(this.orientation + Math.PI*0.5)
         this.position.y += this.velocity * Math.cos(this.orientation - Math.PI*0.5)
+    }
+}
+
+
+//Asteroid class
+class Asteroid {
+    constructor ({
+        position,
+        heading,
+        color
+    }) {
+        this.position = position
+        this.heading = heading
+        this.color = color
+        this.velocity = velocity
+        this.radius = 20 + Math.random() * 20
+    }
+
+    
+    draw() {
+        c.beginPath()
+        c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI*2, false)
+        c.closePath()
+        c.strokeStyle = this.color
+        c.stroke()
+    }
+    
+    update() {
+        this.draw()
+        
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
     }
 }
 
@@ -92,6 +128,8 @@ const player1 = new Player(
 
 player1.draw();
 
+
+//Key enum
 const keys = {
     w: {
         isPressed: false
@@ -110,15 +148,67 @@ const keys = {
     }
 }
 
+//Declarations
 const VMAX = 2.25
-
 const bullets = []
+fillStyles = ['white', 'green', 'blue', 'orange', 'cyan', 'pink']
+const asteroids = []
 
+
+//Spawning asteroids
+window.setInterval(() => {    
+    const dir = Math.floor(Math.random()*4)
+    console.log(dir);
+    
+    let X, Y, heading, vx, vy
+    let velocity = 0
+    switch(dir) {
+        case 0:  //Top
+            X=-50,
+            Y=Math.random()*window.innerHeight
+            heading = (-1+Math.random()*2)*(30*Math.PI/180)
+            vx=1
+            vy=0
+            break;
+        case 1:  //Bottom
+            X=Math.random()*window.innerWidth
+            Y=window.innerHeight + 50;
+            heading = ((-1+Math.random()*2)*(30*Math.PI/180))-(Math.PI*0.5)
+            vx
+            break;
+        case 3:  //Left
+            X=window.innerWidth+50;
+            Y=Math.random()*window.innerHeight
+            heading = ((-1+Math.random()*2)*(30*Math.PI/180))-(Math.PI)
+            break;
+        case 4:  //Right
+            X=Math.random()*window.innerWidth
+            Y=-50
+            heading = ((-1+Math.random()*2)*(30*Math.PI/180))+(Math.PI*0.5)
+            break;
+    }
+
+    console.log(heading);
+    
+
+    asteroids.push(new Asteroid({
+        position: {x: X, y: Y},
+        heading: heading,
+        color: fillStyles[Math.floor(Math.random()*6)]
+    }))
+
+    console.log(asteroids);
+    
+}, 1500)
+
+//Main game loop
 function animate() {
+    //Initialize animating canvas
     window.requestAnimationFrame(animate)
     c.fillStyle = 'black'
     c.fillRect(0, 0, canvas.width, canvas.height)
 
+    //Checking bullet bounds and collision
     for (let bullet of bullets) {
         bullet.update();
 
@@ -127,9 +217,19 @@ function animate() {
         }
     }
 
+    //Checking asteroid bounds and collision
+    for (let asteroid of asteroids) {
+        asteroid.update();
+
+        if(asteroid.position.x < 0 || asteroid.position.x > window.innerWidth || asteroid.position.y < 0 || asteroid.position.y > window.innerHeight){
+            asteroids.splice(asteroids.indexOf(asteroid), 1);      
+        }
+    }
+
     player1.update();
 
-    player1.velocity*=0.99;
+    //Player movement edge cases
+    player1.velocity*=0.98;
     if(keys.w.isPressed){
         player1.velocity<VMAX?player1.velocity+=player1.acceleration:player1.velocity=VMAX;
     }
@@ -143,6 +243,7 @@ function animate() {
         player1.rotation -= 0.015
     }
 
+    //Shooting bullets
     if(keys.space.isPressed) {
         keys.space.isPressed = false
         
