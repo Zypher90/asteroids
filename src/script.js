@@ -87,11 +87,11 @@ class Bullet {
 class Asteroid {
     constructor ({
         position,
+        velocity,
         heading,
         color
     }) {
         this.position = position
-        this.heading = heading
         this.color = color
         this.velocity = velocity
         this.radius = 20 + Math.random() * 20
@@ -157,49 +157,46 @@ const asteroids = []
 
 //Spawning asteroids
 window.setInterval(() => {    
-    const dir = Math.floor(Math.random()*4)
-    console.log(dir);
-    
+    const dir = Math.floor(Math.random()*4)    
     let X, Y, heading, vx, vy
     let velocity = 0
+    heading = (-30+Math.floor(Math.random()*60))
+
     switch(dir) {
-        case 0:  //Top
+        case 0:  //Left
             X=-50,
             Y=Math.random()*window.innerHeight
-            heading = (-1+Math.random()*2)*(30*Math.PI/180)
-            vx=1
-            vy=0
+            vx=0.3+Math.abs(Math.cos(heading))
+            vy=Math.sin(heading)
             break;
         case 1:  //Bottom
             X=Math.random()*window.innerWidth
             Y=window.innerHeight + 50;
-            heading = ((-1+Math.random()*2)*(30*Math.PI/180))-(Math.PI*0.5)
-            vx
+            vx=Math.sin(heading)
+            vy=-0.3-Math.abs(Math.cos(heading))
             break;
-        case 3:  //Left
+        case 2:  //Right
             X=window.innerWidth+50;
             Y=Math.random()*window.innerHeight
-            heading = ((-1+Math.random()*2)*(30*Math.PI/180))-(Math.PI)
+            vx=-0.3-Math.abs(Math.cos(heading))
+            vy=Math.sin(heading)
             break;
-        case 4:  //Right
+        case 3:  //Top
             X=Math.random()*window.innerWidth
             Y=-50
-            heading = ((-1+Math.random()*2)*(30*Math.PI/180))+(Math.PI*0.5)
+            vx=Math.sin(heading)
+            vy=0.3+Math.abs(Math.cos(heading))
             break;
-    }
-
-    console.log(heading);
+    }    
     
 
     asteroids.push(new Asteroid({
         position: {x: X, y: Y},
-        heading: heading,
+        velocity: {x: vx, y: vy},
         color: fillStyles[Math.floor(Math.random()*6)]
     }))
-
-    console.log(asteroids);
     
-}, 1500)
+}, 2500)
 
 //Main game loop
 function animate() {
@@ -221,7 +218,7 @@ function animate() {
     for (let asteroid of asteroids) {
         asteroid.update();
 
-        if(asteroid.position.x < 0 || asteroid.position.x > window.innerWidth || asteroid.position.y < 0 || asteroid.position.y > window.innerHeight){
+        if(asteroid.position.x < -100 || asteroid.position.x > window.innerWidth+100 || asteroid.position.y < -100 || asteroid.position.y > window.innerHeight+100){
             asteroids.splice(asteroids.indexOf(asteroid), 1);      
         }
     }
