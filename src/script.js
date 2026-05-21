@@ -11,7 +11,7 @@ const canvas = document.querySelector('canvas')
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-//Game 
+//Game state initialization
 startButton.addEventListener('click', () => {     
     playerName = playerNameInput.value.trim() === "" ? "Player1" : playerNameInput.value.trim()
     scoreBoard.textContent = `${playerName} : ${playerScore}`
@@ -215,6 +215,7 @@ const VMAX = 2.25
 const bullets = []
 fillStyles = ['white', 'green', 'blue', 'orange', 'cyan', 'pink']
 const asteroids = []
+let shoot = true;
 
 
 //Main game loop
@@ -260,7 +261,7 @@ function animate() {
     }
 
     //Shooting bullets
-    if(keys.space.isPressed) {
+    if(keys.space.isPressed && shoot) {
         keys.space.isPressed = false
         
         bullets.push(new Bullet({
@@ -271,7 +272,7 @@ function animate() {
             velocity: 6,
             orientation: player1.rotation
         }))
-        
+        shoot = false
     }
 }
 
@@ -315,6 +316,7 @@ window.addEventListener('keyup', (e) => {
             break;
         case "Space":
             keys.space.isPressed = false;
+            shoot = true
             break;
     }
 })
