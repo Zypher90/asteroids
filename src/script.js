@@ -1,12 +1,66 @@
-const canvas = document.querySelector('canvas')
-const c = canvas.getContext('2d')
+const canvas = document.querySelector('.canvas')
+const startButton = document.querySelector('.start-button')
+const initOverlay = document.querySelector('.initial-overlay')
+
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+startButton.addEventListener('click', () => {     
+    canvas.style.display = 'block'
+    initOverlay.style.display = 'none'
+    // startButton.style.display = 'none'
+
+    //Spawning asteroids
+    window.setInterval(() => { 
+        console.log("Firing");
+        
+        const dir = Math.floor(Math.random()*4)    
+        let X, Y, heading, vx, vy
+        let velocity = 0
+        heading = (-30+Math.floor(Math.random()*60))
+
+        switch(dir) {
+            case 0:  //Left
+                X=-50,
+                Y=Math.random()*window.innerHeight
+                vx=0.3+Math.abs(Math.cos(heading))
+                vy=Math.sin(heading)
+                break;
+            case 1:  //Bottom
+                X=Math.random()*window.innerWidth
+                Y=window.innerHeight + 50;
+                vx=Math.sin(heading)
+                vy=-0.3-Math.abs(Math.cos(heading))
+                break;
+            case 2:  //Right
+                X=window.innerWidth+50;
+                Y=Math.random()*window.innerHeight
+                vx=-0.3-Math.abs(Math.cos(heading))
+                vy=Math.sin(heading)
+                break;
+            case 3:  //Top
+                X=Math.random()*window.innerWidth
+                Y=-50
+                vx=Math.sin(heading)
+                vy=0.3+Math.abs(Math.cos(heading))
+                break;
+        }    
+        
+
+        asteroids.push(new Asteroid({
+            position: {x: X, y: Y},
+            velocity: {x: vx, y: vy},
+            color: fillStyles[Math.floor(Math.random()*6)]
+        }))
+        
+    }, 2500)
+})
+
+const c = canvas.getContext('2d')
+
 c.fillStyle = 'black'
 c.fillRect(0, 0, canvas.width, canvas.height)
-
 
 //Player object
 class Player {
@@ -154,49 +208,6 @@ const bullets = []
 fillStyles = ['white', 'green', 'blue', 'orange', 'cyan', 'pink']
 const asteroids = []
 
-
-//Spawning asteroids
-window.setInterval(() => {    
-    const dir = Math.floor(Math.random()*4)    
-    let X, Y, heading, vx, vy
-    let velocity = 0
-    heading = (-30+Math.floor(Math.random()*60))
-
-    switch(dir) {
-        case 0:  //Left
-            X=-50,
-            Y=Math.random()*window.innerHeight
-            vx=0.3+Math.abs(Math.cos(heading))
-            vy=Math.sin(heading)
-            break;
-        case 1:  //Bottom
-            X=Math.random()*window.innerWidth
-            Y=window.innerHeight + 50;
-            vx=Math.sin(heading)
-            vy=-0.3-Math.abs(Math.cos(heading))
-            break;
-        case 2:  //Right
-            X=window.innerWidth+50;
-            Y=Math.random()*window.innerHeight
-            vx=-0.3-Math.abs(Math.cos(heading))
-            vy=Math.sin(heading)
-            break;
-        case 3:  //Top
-            X=Math.random()*window.innerWidth
-            Y=-50
-            vx=Math.sin(heading)
-            vy=0.3+Math.abs(Math.cos(heading))
-            break;
-    }    
-    
-
-    asteroids.push(new Asteroid({
-        position: {x: X, y: Y},
-        velocity: {x: vx, y: vy},
-        color: fillStyles[Math.floor(Math.random()*6)]
-    }))
-    
-}, 2500)
 
 //Main game loop
 function animate() {
