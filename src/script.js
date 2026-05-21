@@ -4,12 +4,21 @@ const initOverlay = document.querySelector('.initial-overlay')
 const playerNameInput = document.querySelector('#player-name')
 const scoreBoard = document.querySelector('.score-board')
 
+let explodeSound = new Audio("../assets/explosion.wav")
+let playerExplode = new Audio("../assets/player-explosion.mp3")
+
 let playerName = ""
 let playerScore = 0
 
 const canvas = document.querySelector('canvas')
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+
+async function loadImage(url) {
+    return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
+}
+
+let intervalID
 
 //Game state initialization
 startButton.addEventListener('click', () => {     
@@ -20,9 +29,7 @@ startButton.addEventListener('click', () => {
     initOverlay.style.display = 'none'
 
     //Spawning asteroids
-    window.setInterval(() => { 
-        console.log("Firing");
-        
+    intervalID = window.setInterval(() => {         
         const dir = Math.floor(Math.random()*4)    
         let X, Y, heading, vx, vy
         let velocity = 0
@@ -65,10 +72,72 @@ startButton.addEventListener('click', () => {
     }, 2500)
 })
 
-const c = canvas.getContext('2d')
 
+
+//Canvas background init
+const c = canvas.getContext('2d')
 c.fillStyle = 'black'
 c.fillRect(0, 0, canvas.width, canvas.height)
+
+
+//Collision detections
+function checkCollision(circle1, circle2) {
+    let x = circle2.position.x - circle1.position.x
+    let y = circle2.position.y - circle1.position.y
+    let distance = Math.sqrt(x*x+y*y)
+
+    if(distance <= circle1.radius + circle2.radius){
+        return true
+    }else {
+        return false
+    }
+}
+
+function circleTriangleCollision(circle, triangle) {
+  // Check if the circle is colliding with any of the triangle's edges
+  for (let i = 0; i < 3; i++) {
+    let start = triangle[i]
+    let end = triangle[(i + 1) % 3]
+
+    let dx = end.x - start.x
+    let dy = end.y - start.y
+    let length = Math.sqrt(dx * dx + dy * dy)
+
+    let dot =
+      ((circle.position.x - start.x) * dx +
+        (circle.position.y - start.y) * dy) /
+      Math.pow(length, 2)
+
+    let closestX = start.x + dot * dx
+    let closestY = start.y + dot * dy
+
+    if (!isPointOnLineSegment(closestX, closestY, start, end)) {
+      closestX = closestX < start.x ? start.x : end.x
+      closestY = closestY < start.y ? start.y : end.y
+    }
+
+    dx = closestX - circle.position.x
+    dy = closestY - circle.position.y
+
+    let distance = Math.sqrt(dx * dx + dy * dy)
+
+    if (distance <= circle.radius) {
+      return true
+    }
+  }
+
+  // No collision
+  return false
+}
+
+function isPointOnLineSegment(x, y, start, end) {
+  return (
+    x >= Math.min(start.x, end.x) &&
+    x <= Math.max(start.x, end.x) &&
+    y >= Math.min(start.y, end.y) &&
+    y <= Math.max(start.y, end.y)
+  )
+}
 
 //Player object
 class Player {
@@ -117,6 +186,26 @@ class Player {
         this.position.x += this.velocity * Math.sin(this.rotation + Math.PI * 0.5);
         this.position.y += this.velocity * Math.cos(this.rotation - Math.PI * 0.5);
     }
+
+    getVertices() {
+        const cos = Math.cos(this.rotation)
+        const sin = Math.sin(this.rotation)
+
+        return [
+        {
+            x: this.position.x + cos * 30 - sin * 0,
+            y: this.position.y + sin * 30 + cos * 0,
+        },
+        {
+            x: this.position.x + cos * -10 - sin * 10,
+            y: this.position.y + sin * -10 + cos * 10,
+        },
+        {
+            x: this.position.x + cos * -10 - sin * -10,
+            y: this.position.y + sin * -10 + cos * -10,
+        },
+        ]
+    }
 }
 
 
@@ -125,12 +214,13 @@ class Bullet {
     constructor ({position, velocity, orientation}) {
         this.position = position
         this.velocity = velocity
+        this.radius = 4
         this.orientation = orientation
     }
 
     draw() {
         c.beginPath()
-        c.arc(this.position.x + 15*Math.sin(this.orientation + Math.PI*0.5), this.position.y + 15*Math.cos(this.orientation - Math.PI*0.5), 4, 0, Math.PI*2, false)
+        c.arc(this.position.x + 15*Math.sin(this.orientation + Math.PI*0.5), this.position.y + 15*Math.cos(this.orientation - Math.PI*0.5), this.radius, 0, Math.PI*2, false)
         c.closePath()
         c.fillStyle = 'white'
         c.fill()
@@ -143,7 +233,6 @@ class Bullet {
         this.position.y += this.velocity * Math.cos(this.orientation - Math.PI*0.5)
     }
 }
-
 
 //Asteroid class
 class Asteroid {
@@ -212,6 +301,7 @@ const keys = {
 
 //Declarations
 const VMAX = 2.25
+const RSPEED = 0.03
 const bullets = []
 fillStyles = ['white', 'green', 'blue', 'orange', 'cyan', 'pink']
 const asteroids = []
@@ -219,9 +309,9 @@ let shoot = true;
 
 
 //Main game loop
-function animate() {
+async function animate() {
     //Initialize animating canvas
-    window.requestAnimationFrame(animate)
+    const frameID = window.requestAnimationFrame(animate)
     c.fillStyle = 'black'
     c.fillRect(0, 0, canvas.width, canvas.height)
 
@@ -236,7 +326,25 @@ function animate() {
 
     //Checking asteroid bounds and collision
     for (let asteroid of asteroids) {
-        asteroid.update();
+        asteroid.update()
+
+        if(circleTriangleCollision(asteroid, player1.getVertices())) {
+            playerExplode.play()
+            window.cancelAnimationFrame(frameID)
+            clearInterval(intervalID)
+            document.querySelector('.end-overlay').style.display = 'flex'
+
+        }
+
+        for(let bullet of bullets) {
+            if(checkCollision(bullet, asteroid)){
+                explodeSound.play()
+                playerScore++
+                scoreBoard.textContent = `${playerName} : ${playerScore}`
+                bullets.splice(bullets.indexOf(bullet), 1)
+                asteroids.splice(asteroids.indexOf(asteroid), 1)
+            }
+        }
 
         if(asteroid.position.x < -100 || asteroid.position.x > window.innerWidth+100 || asteroid.position.y < -100 || asteroid.position.y > window.innerHeight+100){
             asteroids.splice(asteroids.indexOf(asteroid), 1);      
@@ -251,13 +359,13 @@ function animate() {
         player1.velocity<VMAX?player1.velocity+=player1.acceleration:player1.velocity=VMAX;
     }
     if(keys.d.isPressed) {
-        player1.rotation += 0.015
+        player1.rotation += RSPEED
     }
     if(keys.s.isPressed) {
         player1.velocity>-VMAX?player1.velocity-=player1.acceleration:player1.velocity=-VMAX;
     }
     if(keys.a.isPressed){
-        player1.rotation -= 0.015
+        player1.rotation -= RSPEED
     }
 
     //Shooting bullets
@@ -319,4 +427,4 @@ window.addEventListener('keyup', (e) => {
             shoot = true
             break;
     }
-})
+});

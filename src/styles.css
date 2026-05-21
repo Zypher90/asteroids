@@ -77,11 +77,30 @@ label {
     position: absolute;
     z-index: 50;
     top: 0.5rem;
-    left: 45%;
+    left: 2rem;
     background-color: rgba(0, 0, 0, 0.0);
     font-family: 'Audiowide', sans-serif;
     font-size: 1.6rem;
     color: white;
     padding: 1rem;
     text-align: center;
+}
+
+.end-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+.end-overlay h2 {
+    font-family: 'Audiowide', sans-serif;
+}
+.end-overlay h3 {
+    font-family: 'Audiowide', sans-serif;    
 }
