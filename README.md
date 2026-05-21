@@ -18,14 +18,6 @@ Fly through space, destroy asteroids, avoid collisions, and survive as long as p
 
 ---
 
-## 📸 Preview
-
-> Add screenshots or gameplay GIFs here
-
-```md
-![Gameplay Screenshot](./screenshots/gameplay.png)
-```
-
 ---
 
 ## 🕹 Controls
