@@ -1,15 +1,23 @@
-const canvas = document.querySelector('.canvas')
+const canvasContainer = document.querySelector('.canvas-container')
 const startButton = document.querySelector('.start-button')
 const initOverlay = document.querySelector('.initial-overlay')
+const playerNameInput = document.querySelector('#player-name')
+const scoreBoard = document.querySelector('.score-board')
 
+let playerName = ""
+let playerScore = 0
 
+const canvas = document.querySelector('canvas')
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+//Game 
 startButton.addEventListener('click', () => {     
-    canvas.style.display = 'block'
+    playerName = playerNameInput.value.trim() === "" ? "Player1" : playerNameInput.value.trim()
+    scoreBoard.textContent = `${playerName} : ${playerScore}`
+    
+    canvasContainer.style.display = 'block'
     initOverlay.style.display = 'none'
-    // startButton.style.display = 'none'
 
     //Spawning asteroids
     window.setInterval(() => { 

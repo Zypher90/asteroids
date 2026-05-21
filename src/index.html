@@ -9,13 +9,16 @@
     <body>
 
         <div class="initial-overlay">
+            <h1 class="game-hero">Asteroids</h1>
             <label for="name-box">Enter player name:</label>
-            <input type="text" name="name-box" id="player-name">
+            <input type="text" name="name-box" id="player-name" placeholder="Player1">
             <button class="start-button">Start</button>
         </div>
 
-
-
-        <canvas class="canvas"></canvas>
+        <div class="canvas-container">
+            <div class="score-board">W</div>
+            <canvas class="canvas"></canvas>
+        </div>
+        
     </body>
 <script src="./script.js"></script>
